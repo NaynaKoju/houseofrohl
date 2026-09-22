@@ -9,11 +9,10 @@ from selenium.webdriver.support import expected_conditions as EC
 
 # CONFIGURE LOGGING
 logging.basicConfig(
-    filename="details.log",
+    filename="../scraper_logs/details.log",
     level=logging.INFO,
     format="%(asctime)s - %(levelname)s - %(message)s"
 )
-
 logger = logging.getLogger(__name__)
 
 
@@ -62,7 +61,6 @@ def scrape_product(driver, url):
             url,
             e
         )
-
 
     # SKU
     try:
@@ -130,23 +128,58 @@ def scrape_product(driver, url):
         )
 
 
-    # Specifications
+        # Specifications
     try:
+
+        # Find the specification section
         specification_element = driver.find_element(
             By.CSS_SELECTOR,
             ".plmr-c-additional-product-specs"
         )
 
-        specification_text = specification_element.text
+        # Find all specification keys
+        specification_keys = specification_element.find_elements(
+            By.CLASS_NAME,
+            "plmr-c-featured-product-specs__item-text"
+        )
 
-        product_data["specifications"] = specification_text
+        # Find all specification values
+        specification_values = specification_element.find_elements(
+            By.CLASS_NAME,
+            "plmr-c-featured-product-specs__item-name"
+        )
+
+        # Create a list to store key-value pairs
+        specification_list = []
+
+        # Go through each specification
+        for key, value in zip(
+            specification_keys,
+            specification_values
+        ):
+
+            # Get the text of the key
+            key_text = key.text.strip()
+
+            # Get the text of the value
+            value_text = value.text.strip()
+
+            # Store the key and value together
+            specification_list.append(
+                f"{key_text}: {value_text}"
+            )
+
+        # Join all specifications into one string
+        product_data["specifications"] = " | ".join(
+            specification_list
+        )
 
     except Exception as e:
+
         logger.warning(
             "Specifications not found for %s",
             url
         )
-
 
     # Return all scraped information for this product
     return product_data
@@ -159,7 +192,7 @@ def get_urls():
     df = pd.read_csv("product_urls.csv")
 
     # Get the URLs column as a list
-    urls = df["urls"].tolist()
+    urls = df["urls"].head(100).tolist()
 
     # Log the number of URLs
     logger.info(
@@ -179,7 +212,7 @@ def save_data(scraped_data):
     # Save the data to CSV
     details_df.to_csv(
         "details.csv",
-        index=False
+        index=True
     )
 
     # Log completion

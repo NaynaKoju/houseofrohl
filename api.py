@@ -6,7 +6,7 @@ import json
 
 # configuring logging
 logging.basicConfig(
-    filename="api.log",
+    filename="../scraper_logs/api.log",
     level=logging.INFO,
     format="%(asctime)s - %(levelname)s - %(message)s"
 )
@@ -84,7 +84,6 @@ df = pd.json_normalize(all_products)
 # Store the variant information
 json_data = []
 
-
 # Go through the JSON data of every product
 for product_json in df["json"]:
 
@@ -96,7 +95,6 @@ for product_json in df["json"]:
 
     # Add the variants to the list
     json_data.extend(variant_data)
-
 
 # Convert the variant data into a DataFrame
 normalized_df = pd.json_normalize(json_data)
@@ -118,7 +116,7 @@ logger.info(
 # Save the variant URLs to CSV
 normalized_df["urls"].to_csv(
     "product_urls.csv",
-    index=False
+    index=True
 )
 
 
