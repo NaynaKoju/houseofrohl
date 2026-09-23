@@ -1,6 +1,8 @@
 import pandas as pd
 import logging
 import json
+
+from dbconnect.insert import insert_product
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
@@ -93,7 +95,7 @@ def scrape_product(driver, url):
             url
         )
 
-        # Features
+# Features
     try:
         feature_element = driver.find_element(
             By.CSS_SELECTOR,
@@ -184,7 +186,7 @@ def get_urls():
     df = pd.read_csv("product_urls.csv")
 
     # Get the URLs column as a list
-    urls = df["urls"].head(100).tolist()
+    urls = df["urls"].head(30).tolist()
 
     # Log the number of URLs
     logger.info(
@@ -204,7 +206,7 @@ def save_data(scraped_data):
     # Save the data to CSV
     details_df.to_csv(
         "details.csv",
-        index=True
+        index=False
     )
 
     # Log completion
@@ -213,20 +215,15 @@ def save_data(scraped_data):
         len(details_df)
     )
 
-
 # Main function
 def main():
 
-    # Get all product URLs from CSV
     urls = get_urls()
 
-    # Start Selenium
     driver = start_driver()
 
-    # Create a list to store scraped product data
     scraped_data = []
 
-    # Scrape each product
     for url in urls:
 
         try:
@@ -236,14 +233,15 @@ def main():
                 url
             )
 
-            # Scrape the current product
             product_data = scrape_product(
                 driver,
                 url
             )
 
-            # Add the product data to the main list
             scraped_data.append(product_data)
+
+            # Insert this individual product into MySQL
+            insert_product(product_data)
 
             logger.info(
                 "Product scraped successfully: %s",
@@ -258,7 +256,6 @@ def main():
                 e
             )
 
-            # Keep the failed URL in the final CSV
             scraped_data.append({
                 "url": url,
                 "product_name": "",
@@ -269,14 +266,10 @@ def main():
                 "specifications": ""
             })
 
-
-    # Close Selenium after scraping all products
     driver.quit()
 
-    # Save all scraped data
     save_data(scraped_data)
 
 
-# Run the main function
 if __name__ == "__main__":
     main()
