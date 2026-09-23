@@ -1,6 +1,6 @@
 import pandas as pd
 import logging
-
+import json
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
@@ -93,15 +93,19 @@ def scrape_product(driver, url):
             url
         )
 
-
-    # Features
+        # Features
     try:
         feature_element = driver.find_element(
-            By.ID,
-            "pdp-features"
+            By.CSS_SELECTOR,
+            ".js-product-features"
         )
 
-        feature_text = feature_element.text
+        feature_items = feature_element.find_elements(
+            By.TAG_NAME,
+            "li"
+        )
+
+        feature_text = [item.text for item in feature_items]
 
         product_data["features"] = feature_text
 
@@ -128,54 +132,42 @@ def scrape_product(driver, url):
         )
 
 
-        # Specifications
+    # Specifications
     try:
 
-        # Find the specification section
         specification_element = driver.find_element(
             By.CSS_SELECTOR,
             ".plmr-c-additional-product-specs"
         )
 
-        # Find all specification keys
         specification_keys = specification_element.find_elements(
             By.CLASS_NAME,
             "plmr-c-featured-product-specs__item-text"
         )
 
-        # Find all specification values
         specification_values = specification_element.find_elements(
             By.CLASS_NAME,
             "plmr-c-featured-product-specs__item-name"
         )
 
-        # Create a list to store key-value pairs
-        specification_list = []
+        specification_dict = {}
 
-        # Go through each specification
         for key, value in zip(
             specification_keys,
             specification_values
         ):
-
-            # Get the text of the key
             key_text = key.text.strip()
-
-            # Get the text of the value
             value_text = value.text.strip()
 
-            # Store the key and value together
-            specification_list.append(
-                f"{key_text}: {value_text}"
-            )
+            specification_dict[key_text] = value_text
 
-        # Join all specifications into one string
-        product_data["specifications"] = " | ".join(
-            specification_list
+        print(specification_dict)
+
+        product_data["specifications"] = json.dumps(
+            specification_dict
         )
 
     except Exception as e:
-
         logger.warning(
             "Specifications not found for %s",
             url
