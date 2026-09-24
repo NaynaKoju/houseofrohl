@@ -6,5 +6,6 @@ __pycache__/
 *.log
 scraper_logs/
 
-connector.py
 mysql_test.py
+
+*.venv
