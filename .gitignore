@@ -6,5 +6,5 @@ __pycache__/
 *.log
 scraper_logs/
 
-dbconnect/
+connector.py
 mysql_test.py
